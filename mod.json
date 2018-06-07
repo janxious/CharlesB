@@ -2,7 +2,7 @@
   "Name": "CharlesB",
   "Enabled": true,
 
-  "Version": "0.1.0",
+  "Version": "0.2.0",
 
   "Author": "janxious",
   "Website": "https://github.com/janxious/CharlesB",
@@ -13,8 +13,13 @@
   "ConflictsWith": [],
 
   "Settings": {
-    "attackMissInstabilityPercent": "40",
-    "attackMissInstabilityLeggedPercent": "100",
-    "allowSteadyToKnockdown": true
+    "attackMissInstabilityPercent": "35",
+    "attackMissInstabilityLeggedPercent": "70",
+    
+    "dfaMissDoubleAttackerInstability": true,
+    
+    "allowSteadyToKnockdownForMelee": true,
+
+    "debug": false
   }
 }

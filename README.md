@@ -27,7 +27,7 @@ Setting | Type | Default | Description
 --- | --- | --- | ---
 `attackMissInstabilityPercent` | `int` | `40` | the percentage of your stability bar that is filled when a mech misses a melee attack
 `attackMissInstabilityLeggedPercent` | `int` | `100` | the percentage of your stability bar that is filled when the attacking mech is legged and misses a melee attack
-`allowSteadyToKnockdown` | `bool` | `true` | allow a mech to go from steady to knockdown as part of melee attack miss
+`allowSteadyToKnockdownForMelee` | `bool` | `true` | allow a mech to go from steady to knockdown as part of melee attack miss
 `debug` | `bool` | `false` | enable debugging logs, probably not useful unless you are changing the code or looking at it as you run the mod
 
 ## Special Thanks

@@ -10,7 +10,10 @@
         public int attackMissInstabilityLeggedPercent = 100;
         public float AttackMissInstabilityLeggedPercent => (float)attackMissInstabilityLeggedPercent / 100.0f;
 
-        public bool allowSteadyToKnockdown = true;
-        public bool AllowSteadyToKnockdown => allowSteadyToKnockdown;
+        public bool allowSteadyToKnockdownForMelee = true;
+        public bool AllowSteadyToKnockdownForMelee => allowSteadyToKnockdownForMelee;
+
+        public bool dfaMissDoubleAttackerInstability = true;
+        public bool DfaMissDoubleAttackerInstability => dfaMissDoubleAttackerInstability;
     }
 }
