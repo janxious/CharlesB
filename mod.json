@@ -1,0 +1,20 @@
+﻿{
+  "Name": "CharlesB",
+  "Enabled": true,
+
+  "Version": "0.1.0",
+
+  "Author": "janxious",
+  "Website": "https://github.com/janxious/CharlesB",
+
+  "DLL": "CharlesB.dll",
+  "DLLEntryPoint": "CharlesB.CharlesB.Init",
+  "DependsOn": [],
+  "ConflictsWith": [],
+
+  "Settings": {
+    "attackMissInstabilityPercent": "40",
+    "attackMissInstabilityLeggedPercent": "100",
+    "allowSteadyToKnockdown": true
+  }
+}
