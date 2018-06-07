@@ -9,9 +9,9 @@ BattleTech Mod (using [BTML](https://github.com/Mpstark/BattleTechModLoader) and
 
 ## Features
 
-- when you are melee'ing and you miss, add some instability to yourself
-- when you are melee'ing and you're legged, add a different amount of instability
-- knock yourself down if you add enough instability, even if you're not unsteady before the attack 
+- when melee'ing and miss, add some instability
+- when melee'ing and legged and miss, add a different amount of instability
+- get knocked down if you enough instability, even if not unsteady before the attack 
 
 ## Download
 Downloads can be found on [Github](https://github.com/janxious/CharlesB/releases).
