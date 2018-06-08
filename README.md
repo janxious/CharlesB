@@ -11,7 +11,11 @@ BattleTech Mod (using [BTML](https://github.com/Mpstark/BattleTechModLoader) and
 
 - when melee'ing and miss, add some instability
 - when melee'ing and legged and miss, add a different amount of instability
-- get knocked down if you enough instability, even if not unsteady before the attack 
+- get knocked down if you enough instability, even if not unsteady before the attack
+- add double instability for DFA misses to the attacker
+- do more instability checks after combat completes to allow for "one punch-man" knockdowns AKA if I hit you hard enough you can go from zero stability to knocked down on your back
+
+
 
 ## Download
 Downloads can be found on [Github](https://github.com/janxious/CharlesB/releases).
