@@ -35,26 +35,43 @@ namespace CharlesB
     {
         static void Postfix(ref MessageCenterMessage message, MechMeleeSequence __instance)
         {
-            Logger.Debug($"checking for miss: {(message as AttackCompleteMessage).attackSequence.attackCompletelyMissed}");
-            var attackCompleteMessage = (AttackCompleteMessage) message;
-            var attacker = __instance.OwningMech;
-            if (attackCompleteMessage.attackSequence.attackCompletelyMissed && CharlesB.ModSettings.DfaMissDoubleAttackerInstability)
+            if (CharlesB.ModSettings.DfaMissInstability)
             {
-                Logger.Debug("We missed!");
-                Logger.Debug($"flagged for knowckdown? {attacker.IsFlaggedForKnockdown}");
-                attacker.ApplyInstabilityReduction(StabilityChangeSource.DFA);
-                attacker.NeedsInstabilityCheck = true;
-                attacker.CheckForInstability();
-                Logger.Debug($"flagged for knowckdown? {attacker.IsFlaggedForKnockdown}");
-                if (CharlesB.ModSettings.AllowSteadyToKnockdownForMelee)
+                Logger.Debug($"checking for miss: {(message as AttackCompleteMessage).attackSequence.attackCompletelyMissed}");
+                var attackCompleteMessage = (AttackCompleteMessage) message;
+                var attacker = __instance.OwningMech;
+                if (attackCompleteMessage.attackSequence.attackCompletelyMissed)
                 {
+                    Logger.Debug("We missed!");
+                    Logger.Debug($"flagged for knockdown? {attacker.IsFlaggedForKnockdown}");
+                    var rawInstabilityToAdd = attacker.IsLegged
+                        ? CharlesB.ModSettings.DfaMissInstabilityLeggedPercent
+                        : CharlesB.ModSettings.DfaMissInstabilityPercent;
+                    var instabilityToAdd = rawInstabilityToAdd;
+                    if (CharlesB.ModSettings.pilotingSkillInstabilityMitigation)
+                    {
+                        // pilot skill can mitigate up to skill level * 10% of instability
+                        var pilotSkill = attacker.SkillPiloting;
+                        var mitigationMax = (float) Mathf.Min(pilotSkill, 10) / 10;
+                        var mitigation = UnityEngine.Random.Range(0, mitigationMax);
+                        var mitigationPercent = Mathf.RoundToInt(mitigation * 100);
+                        instabilityToAdd = rawInstabilityToAdd - rawInstabilityToAdd * mitigation;
+                        Logger.Debug($"dfa miss numbers\npilotSkill: {pilotSkill}\nmitigationMax: {mitigationMax}\nmitigation: {mitigation}\nrawInstabilityToAdd: {rawInstabilityToAdd}\nmitigationPercent: {mitigationPercent}\ninstabilityToAdd: {instabilityToAdd}");
+                        attacker.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(attacker, $"Pilot Check: Avoided {mitigationPercent}% Instability!", FloatieMessage.MessageNature.Neutral, true)));
+                    }
+
+                    attacker.AddRelativeInstability(instabilityToAdd, StabilityChangeSource.DFA, attacker.GUID);
                     attacker.NeedsInstabilityCheck = true;
                     attacker.CheckForInstability();
-                    Logger.Debug($"flagged for knowckdown? {attacker.IsFlaggedForKnockdown}");
+                    Logger.Debug($"flagged for knockdown? {attacker.IsFlaggedForKnockdown}");
+                    if (CharlesB.ModSettings.AllowSteadyToKnockdownForMelee)
+                    {
+                        attacker.NeedsInstabilityCheck = true;
+                        attacker.CheckForInstability();
+                        Logger.Debug($"flagged for knockdown? {attacker.IsFlaggedForKnockdown}");
+                    }
                 }
             }
-
-
         }
     }
 
@@ -63,7 +80,7 @@ namespace CharlesB
     {
         static bool Prefix(MechMeleeSequence __instance)
         {
-            var attacker = __instance.OwningMech;
+            // allow DFA to knock down target in single hit
             if (CharlesB.ModSettings.AllowSteadyToKnockdownForMelee)
             {
                 if (!__instance.MeleeTarget.IsDead)
@@ -80,6 +97,7 @@ namespace CharlesB
                         target.NeedsInstabilityCheck = true;
                         target.CheckForInstability();
                         Logger.Debug($"found aa. downed? {mech.IsUnsteady} : {mech.IsProne}");
+                        var attacker = __instance.OwningMech;
                         target.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
                     }
                 }
@@ -94,22 +112,44 @@ namespace CharlesB
         static void Postfix(ref MessageCenterMessage message, MechMeleeSequence __instance)
         {
             Logger.Debug($"checking for miss: {(message as AttackCompleteMessage).attackSequence.attackCompletelyMissed}");
-            var attackCompleteMessage = (AttackCompleteMessage) message;
-            var attacker = __instance.OwningMech;
-            if (attackCompleteMessage.attackSequence.attackCompletelyMissed)
+
+            if (CharlesB.ModSettings.AttackMissInstability)
             {
-                var instabilityToAdd = attacker.IsLegged
-                    ? CharlesB.ModSettings.AttackMissInstabilityLeggedPercent
-                    : CharlesB.ModSettings.AttackMissInstabilityPercent;
-                attacker.AddRelativeInstability(instabilityToAdd, StabilityChangeSource.Attack, attacker.GUID);
-                attacker.NeedsInstabilityCheck = true;
-              if (CharlesB.ModSettings.AllowSteadyToKnockdownForMelee)
-              {
-                  attacker.CheckForInstability();
-                  attacker.NeedsInstabilityCheck = true;
-              }
+                // Deal with attacker missing
+                var attackCompleteMessage = (AttackCompleteMessage) message;
+                var attacker = __instance.OwningMech;
+                if (attackCompleteMessage.attackSequence.attackCompletelyMissed)
+                {
+                    Logger.Debug($"melee pre-miss stability: {attacker.CurrentStability}");
+                    var rawInstabilityToAdd = attacker.IsLegged
+                        ? CharlesB.ModSettings.AttackMissInstabilityLeggedPercent
+                        : CharlesB.ModSettings.AttackMissInstabilityPercent;
+                    var instabilityToAdd = rawInstabilityToAdd;
+                    if (CharlesB.ModSettings.pilotingSkillInstabilityMitigation)
+                    {
+                        // pilot skill can mitigate up to skill level * 10% of instability
+                        var pilotSkill = attacker.SkillPiloting;
+                        var mitigationMax = (float) Mathf.Min(pilotSkill, 10) / 10;
+                        var mitigation = UnityEngine.Random.Range(0, mitigationMax);
+                        var mitigationPercent = Mathf.RoundToInt(mitigation * 100);
+                        instabilityToAdd = rawInstabilityToAdd - rawInstabilityToAdd * mitigation;
+                        Logger.Debug($"melee miss numbers\npilotSkill: {pilotSkill}\nmitigationMax: {mitigationMax}\nmitigation: {mitigation}\nrawInstabilityToAdd: {rawInstabilityToAdd}\nmitigationPercent: {mitigationPercent}\ninstabilityToAdd: {instabilityToAdd}");
+                        attacker.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(attacker, $"Pilot Check: Avoided {mitigationPercent}% Instability!", FloatieMessage.MessageNature.Neutral, true)));
+                    }
+
+                    attacker.AddRelativeInstability(instabilityToAdd, StabilityChangeSource.Attack, attacker.GUID);
+                    Logger.Debug($"melee post-miss stability: {attacker.CurrentStability}");
+                    attacker.NeedsInstabilityCheck = true;
+                    if (CharlesB.ModSettings.AllowSteadyToKnockdownForMelee)
+                    {
+                        attacker.CheckForInstability();
+                        attacker.NeedsInstabilityCheck = true;
+                    }
+                }
             }
 
+            // Deal with target needing additional checks if we want to be able to knock over
+            // mechs in a single round from one attack.
             if (CharlesB.ModSettings.AllowSteadyToKnockdownForMelee)
             {
                 if (!__instance.MeleeTarget.IsDead)
@@ -119,6 +159,7 @@ namespace CharlesB
                     {
                         target.NeedsInstabilityCheck = true;
                         target.CheckForInstability();
+                        var attacker = __instance.OwningMech;
                         target.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
                     }
                 }
@@ -131,8 +172,12 @@ namespace CharlesB
     {
         static bool Prefix(MechMeleeSequence __instance)
         {
+            // attacker second instability check during melee whiff
             var attacker = __instance.OwningMech;
             attacker.CheckForInstability();
+            attacker.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
+
+            // second target instability check during melee hit if can go to ground in one hit
             if (CharlesB.ModSettings.AllowSteadyToKnockdownForMelee)
             {
                 if (!__instance.MeleeTarget.IsDead)
@@ -146,7 +191,6 @@ namespace CharlesB
                     }
                 }
             }
-            attacker.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
             Logger.Debug($"did we fall? {attacker.IsProne}");
             return true;
         }

@@ -11,7 +11,10 @@ BattleTech Mod (using [BTML](https://github.com/Mpstark/BattleTechModLoader) and
 
 - when melee'ing and miss, add some instability
 - when melee'ing and legged and miss, add a different amount of instability
+- when DFA'ing, add some additional instability on a miss
+- when DFA'ing and attacker is legged (WHHHHHY would you choose this), even more instability 
 - get knocked down if you enough instability, even if not unsteady before the attack 
+- piloting skill can mitigate these additional instability points
 
 ## Download
 Downloads can be found on [Github](https://github.com/janxious/CharlesB/releases).
@@ -25,8 +28,13 @@ Downloads can be found on [Github](https://github.com/janxious/CharlesB/releases
 
 Setting | Type | Default | Description
 --- | --- | --- | ---
-`attackMissInstabilityPercent` | `int` | `40` | the percentage of your stability bar that is filled when a mech misses a melee attack
-`attackMissInstabilityLeggedPercent` | `int` | `100` | the percentage of your stability bar that is filled when the attacking mech is legged and misses a melee attack
+`attackMissInstability` | `bool` | `true` | enable/disable instability to the attacker when a melee strike misses
+`attackMissInstabilityPercent` | `int` | `30` | the percentage of your stability bar that is filled when a mech misses a melee attack
+`attackMissInstabilityLeggedPercent` | `int` | `70` | the percentage of your stability bar that is filled when the attacking mech is legged and misses a melee attack
+`dfaMissInstability` | `bool` | `true` | enable/disable (additional) instability to the attacker when a dfa misses
+`dfaMissInstabilityPercent` | `int` | `30` | the percentage of your stability bar that is filled when a mech misses a dfa
+`dfaMissInstabilityLeggedPercent` | `int` | `70` | the percentage of your stability bar that is filled when the dfa'ing mech is legged and misses the dfa
+`pilotingSkillInstabilityMitigation` | `bool` | `true` | allows the piloting skill to mitigate up to piloting skill * 10% of the additional instability caused by missed melee/dfa attacks
 `allowSteadyToKnockdownForMelee` | `bool` | `true` | allow a mech to go from steady to knockdown as part of melee attack miss
 `debug` | `bool` | `false` | enable debugging logs, probably not useful unless you are changing the code or looking at it as you run the mod
 

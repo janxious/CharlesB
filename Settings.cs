@@ -4,16 +4,28 @@
     {
         public bool debug = false;
 
-        public int attackMissInstabilityPercent = 40;
-        public float AttackMissInstabilityPercent => (float)attackMissInstabilityPercent / 100.0f;
+        public bool attackMissInstability = true;
+        public bool AttackMissInstability => attackMissInstability;
 
-        public int attackMissInstabilityLeggedPercent = 100;
-        public float AttackMissInstabilityLeggedPercent => (float)attackMissInstabilityLeggedPercent / 100.0f;
+        public int attackMissInstabilityPercent = 30;
+        public float AttackMissInstabilityPercent => attackMissInstabilityPercent / 100.0f;
+
+        public int attackMissInstabilityLeggedPercent = 70;
+        public float AttackMissInstabilityLeggedPercent => attackMissInstabilityLeggedPercent / 100.0f;
+
+        public bool pilotingSkillInstabilityMitigation = true;
+        public bool PilotingSkillInstabilityMitigation => pilotingSkillInstabilityMitigation;
 
         public bool allowSteadyToKnockdownForMelee = true;
         public bool AllowSteadyToKnockdownForMelee => allowSteadyToKnockdownForMelee;
 
-        public bool dfaMissDoubleAttackerInstability = true;
-        public bool DfaMissDoubleAttackerInstability => dfaMissDoubleAttackerInstability;
+        public bool dfaMissInstability = true;
+        public bool DfaMissInstability => dfaMissInstability;
+
+        public int dfaMissInstabilityPercent = 40;
+        public float DfaMissInstabilityPercent => dfaMissInstabilityPercent / 100.0f;
+
+        public int dfaMissInstabilityLeggedPercent = 80;
+        public float DfaMissInstabilityLeggedPercent => dfaMissInstabilityLeggedPercent / 100.0f;
     }
 }
