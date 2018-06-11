@@ -30,6 +30,7 @@ namespace CharlesB
         }
     }
     
+    // this is the function that gets called after dfa hit/miss has been resolved but before the turn is over
     [HarmonyPatch(typeof(MechDFASequence), "OnMeleeComplete")]
     public static class MechDFASequence_OnMeleeComplete_Patch
     {
@@ -75,6 +76,7 @@ namespace CharlesB
         }
     }
 
+    // this is called just before relinquishing control in a dfa attack
     [HarmonyPatch(typeof(MechDFASequence), "CompleteOrders", new Type[] { })]
     public static class MechDFASequence_CompleteOrders_Patch
     {
