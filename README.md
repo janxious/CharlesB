@@ -15,6 +15,7 @@ BattleTech Mod (using [BTML](https://github.com/Mpstark/BattleTechModLoader) and
 - when DFA'ing and attacker is legged (WHHHHHY would you choose this), even more instability 
 - get knocked down if you enough instability, even if not unsteady before the attack 
 - piloting skill can mitigate these additional instability points
+- DFA leg damage and instability damage can be mitigated by piloting level
 
 ## Download
 Downloads can be found on [Github](https://github.com/janxious/CharlesB/releases).
@@ -36,6 +37,7 @@ Setting | Type | Default | Description
 `dfaMissInstabilityLeggedPercent` | `int` | `70` | the percentage of your stability bar that is filled when the dfa'ing mech is legged and misses the dfa
 `pilotingSkillInstabilityMitigation` | `bool` | `true` | allows the piloting skill to mitigate up to piloting skill * 10% of the additional instability caused by missed melee/dfa attacks
 `allowSteadyToKnockdownForMelee` | `bool` | `true` | allow a mech to go from steady to knockdown as part of melee attack miss
+`pilotingSkillDFASelfDamageMitigation` | `bool` | `true` | allows the piloting skill to mitigate up to piloting skill * 10% of the additional leg damage caused by melee/dfa attacks
 `debug` | `bool` | `false` | enable debugging logs, probably not useful unless you are changing the code or looking at it as you run the mod
 
 ## Special Thanks

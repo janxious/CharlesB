@@ -19,6 +19,9 @@
         public bool pilotingSkillInstabilityMitigation = true;
         public bool PilotingSkillInstabilityMitigation => pilotingSkillInstabilityMitigation;
 
+        public bool pilotingSkillDFASelfDamageMitigation = true;
+        public bool PilotingSkillDFASelfDamageMitigation => pilotingSkillDFASelfDamageMitigation;
+
         public bool allowSteadyToKnockdownForMelee = true;
         public bool AllowSteadyToKnockdownForMelee => allowSteadyToKnockdownForMelee;
 

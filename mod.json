@@ -2,7 +2,7 @@
   "Name": "CharlesB",
   "Enabled": true,
 
-  "Version": "0.3.0",
+  "Version": "0.3.5",
 
   "Author": "janxious",
   "Website": "https://github.com/janxious/CharlesB",
@@ -22,7 +22,8 @@
     "dfaMissInstabilityLeggedPercent": 80,
 
     "pilotingSkillInstabilityMitigation": true,
-    
+    "pilotingSkillDFASelfDamageMitigation": true,
+
     "allowSteadyToKnockdownForMelee": true,
 
     "debug": false

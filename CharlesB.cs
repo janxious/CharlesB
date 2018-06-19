@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
+using System.Text;
 using BattleTech;
+using BattleTech.AttackDirectorHelpers;
 using Harmony;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -29,6 +34,115 @@ namespace CharlesB
             harmony.PatchAll(Assembly.GetExecutingAssembly());
         }
     }
+
+    [HarmonyPatch(typeof(AttackDirector.AttackSequence), "OnAttackSequenceResolveDamage")]
+    public static class AttackDirector__AttackSequence_OnAttackSequenceResolveDamage_Patch
+    {
+        // † † † † †
+        // static string instructionString;
+        // † † † † †
+
+        public static int bogusAssMeleeAttackType = 200_020_002;
+
+        public static bool Prefix(ref MessageCenterMessage message, AttackDirector.AttackSequence __instance)
+        {
+            Logger.Debug("hit prefix");
+            AttackSequenceResolveDamageMessage attackSequenceResolveDamageMessage = (AttackSequenceResolveDamageMessage)message;
+            WeaponHitInfo hitInfo = attackSequenceResolveDamageMessage.hitInfo;
+            if (hitInfo.attackSequenceId == __instance.id)
+            {
+                var messageCoordinator = Traverse.Create(__instance).Field("messageCoordinator").GetValue<MessageCoordinator>();
+                if (messageCoordinator.CanProcessMessage(attackSequenceResolveDamageMessage))
+                {
+                    int attackGroupIndex = attackSequenceResolveDamageMessage.hitInfo.attackGroupIndex;
+                    int attackWeaponIndex = attackSequenceResolveDamageMessage.hitInfo.attackWeaponIndex;
+                    Weapon weapon = __instance.GetWeapon(attackGroupIndex, attackWeaponIndex);
+                    if (__instance.meleeAttackType == MeleeAttackType.DFA)
+                    {
+                        var rawDFASelfDamageValue = __instance.attacker.StatCollection.GetValue<float>("DFASelfDamage");
+                        var dfaSelfDamageValue = rawDFASelfDamageValue;
+                        if (CharlesB.ModSettings.PilotingSkillDFASelfDamageMitigation)
+                        {
+                            // pilot skill can mitigate up to skill level * 10% of instability
+                            var pilotSkill = __instance.attacker.SkillPiloting;
+                            var mitigationMax = (float)Mathf.Min(pilotSkill, 10) / 10;
+                            var mitigation = UnityEngine.Random.Range(0, mitigationMax);
+                            var mitigationPercent = Mathf.RoundToInt(mitigation * 100);
+                            dfaSelfDamageValue = rawDFASelfDamageValue - rawDFASelfDamageValue * mitigation;
+                            Logger.Debug($"dfa miss numbers\npilotSkill: {pilotSkill}\nmitigationMax: {mitigationMax}\nmitigation: {mitigation}\nrawDFASelfDamageValue: {rawDFASelfDamageValue}\nmitigationPercent: {mitigationPercent}\ndfaSelfDamageValue: {dfaSelfDamageValue}");
+                            __instance.attacker.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(__instance.attacker, $"Pilot Check: Avoided {mitigationPercent}% DFA Self-Damage!", FloatieMessage.MessageNature.Neutral, true)));
+                        }
+                        __instance.attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, (int) ArmorLocation.LeftLeg, weapon, dfaSelfDamageValue, 0);
+                        __instance.attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, (int) ArmorLocation.RightLeg, weapon, dfaSelfDamageValue, 0);
+                        if (AttackDirector.damageLogger.IsLogEnabled)
+                        {
+                            AttackDirector.damageLogger.Log(string.Format("@@@@@@@@ {0} takes {1} damage to its legs from the DFA attack!", __instance.attacker.DisplayName, dfaSelfDamageValue));
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        // What does this bullshit do? Glad you asked. The following code was in the orig method, and
+        // the Transpiler patch replaces "this.meleeAttackType" bit with a bogus value defined above
+        // so this will always evaluate to false so we can deal with the damage elsewhere in a different 
+        // patch.
+        //
+        //    if (this.meleeAttackType == MeleeAttackType.DFA) {
+        //        float value = this.attacker.StatCollection.GetValue<float>("DFASelfDamage");
+        //        this.attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, 64, weapon, value, 0);
+        //        this.attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, 128, weapon, value, 0);
+        //        if (AttackDirector.damageLogger.IsLogEnabled)
+        //        {
+        //            AttackDirector.damageLogger.Log(string.Format("@@@@@@@@ {0} takes {1} damage to its legs from the DFA attack!", this.attacker.DisplayName, value));
+        //        }
+        //    }
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> instructionList = instructions.ToList();
+            var attackTypeFieldInfo = AccessTools.Field(typeof(AttackDirector.AttackSequence), "meleeAttackType");
+            var replacementFieldInfo = AccessTools.Field(typeof(AttackDirector__AttackSequence_OnAttackSequenceResolveDamage_Patch), "bogusAssMeleeAttackType");
+            var startIndex = instructionList.FindIndex(instruction => instruction?.operand == attackTypeFieldInfo);
+            instructionList[startIndex].operand = replacementFieldInfo;
+            return instructionList;
+
+            // † † † † †
+            // here lies the ghosts of making this work, to be studied by future generations.
+            // † † † † †
+            //var output = new StringBuilder();
+            //if (instructions == null)
+            //{
+            //    output.Append("no instructions found");
+            //    return instructions;
+            //} else {
+            //    output.Append("instructions found.\n");
+            //}
+
+
+
+            //var endIndex = instructionList.FindIndex(instruction => instruction?.operand == targetFieldInfo) - 1;
+            //output.Append($"startIndex: {startIndex}\nendIndex: {endIndex}\n");
+            //output.Append($"attack null? {attackTypeFieldInfo == null}\ntarget null?{targetFieldInfo == null}");
+
+
+            // instructionList.RemoveRange(startIndex, endIndex - startIndex - 1);
+            // instructionList[startIndex].labels.Clear();
+
+            //instructionList.ToArray().Aggregate(output, (acc, ins) => 
+            //{
+            //    ins?.labels?.ForEach((obj) => acc.Append($"{obj.ToString()} : {obj.GetHashCode()}]\n" ));
+            //    acc.Append(ins?.opcode.ToString());
+            //    acc.Append(" : ");
+            //    acc.Append(ins?.operand?.ToString());
+            //    acc.Append("\n"); 
+            //    return acc; 
+            //});
+            //instructionString = output.ToString();
+
+            //return instructions;
+        }
+    }
     
     // this is the function that gets called after dfa hit/miss has been resolved but before the turn is over
     [HarmonyPatch(typeof(MechDFASequence), "OnMeleeComplete")]
@@ -49,7 +163,7 @@ namespace CharlesB
                         ? CharlesB.ModSettings.DfaMissInstabilityLeggedPercent
                         : CharlesB.ModSettings.DfaMissInstabilityPercent;
                     var instabilityToAdd = rawInstabilityToAdd;
-                    if (CharlesB.ModSettings.pilotingSkillInstabilityMitigation)
+                    if (CharlesB.ModSettings.PilotingSkillInstabilityMitigation)
                     {
                         // pilot skill can mitigate up to skill level * 10% of instability
                         var pilotSkill = attacker.SkillPiloting;
