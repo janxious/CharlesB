@@ -2,6 +2,9 @@
 {
     public class Settings
     {
+
+        public const string ModName = "CharlesB";
+
         public bool debug = false;
 
         public bool attackMissInstability = true;

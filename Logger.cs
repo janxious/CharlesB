@@ -1,14 +1,16 @@
 ﻿using System;
 using System.IO;
+using static CharlesB.CharlesB;
 
 namespace CharlesB
 {
     public class Logger
     {
+        private static string LogFilePath => $"{ModDirectory}/{Settings.ModName}.log";
+
         public static void Error(Exception ex)
         {
-            var filePath = $"{CharlesB.ModDirectory}/CharlesB.log";
-            using (var writer = new StreamWriter(filePath, true))
+            using (var writer = new StreamWriter(LogFilePath, true))
             {
                 writer.WriteLine($"Message: {ex.Message}");
                 writer.WriteLine($"StackTrace: {ex.StackTrace}");
@@ -19,8 +21,7 @@ namespace CharlesB
         public static void Debug(String line)
         {
             if (!CharlesB.ModSettings.debug) return;
-            var filePath = $"{CharlesB.ModDirectory}/CharlesB.log";
-            using (var writer = new StreamWriter(filePath, true))
+            using (var writer = new StreamWriter(LogFilePath, true))
             {
                 writer.WriteLine(line);
                 WriteLogFooter(writer);
