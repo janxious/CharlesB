@@ -43,3 +43,7 @@ Setting | Type | Default | Description
 ## Special Thanks
 
 HBS, @Mpstark, @Morphyum
+
+## License
+
+[MIT](LICENSE)
