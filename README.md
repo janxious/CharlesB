@@ -38,6 +38,9 @@ Setting | Type | Default | Description
 `pilotingSkillInstabilityMitigation` | `bool` | `true` | allows the piloting skill to mitigate up to piloting skill * 10% of the additional instability caused by missed melee/dfa attacks
 `allowSteadyToKnockdownForMelee` | `bool` | `true` | allow a mech to go from steady to knockdown as part of melee attack miss
 `pilotingSkillDFASelfDamageMitigation` | `bool` | `true` | allows the piloting skill to mitigate up to piloting skill * 10% of the additional leg damage caused by melee/dfa attacks
+`pilotingSkillFallingDamageMitigation` | `bool` | `true` | allows the piloting skill to mitigate up to piloting skill * 10% of falling damage if falling damage is enabled
+`fallingDamage` | `bool` | `true` | enable mechs to take falling damage when they fall down for any reason
+`fallingDamageAmount` | `int` | `5` | the amount of damage a mech takes to a random location when it falls down if falling damage is enabled 
 `debug` | `bool` | `false` | enable debugging logs, probably not useful unless you are changing the code or looking at it as you run the mod
 
 ## Special Thanks

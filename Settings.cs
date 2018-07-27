@@ -2,11 +2,6 @@
 {
     public class Settings
     {
-
-        public const string ModName = "CharlesB";
-
-        public bool debug = false;
-
         public bool attackMissInstability = true;
         public bool AttackMissInstability => attackMissInstability;
 
@@ -22,6 +17,9 @@
         public bool pilotingSkillDFASelfDamageMitigation = true;
         public bool PilotingSkillDFASelfDamageMitigation => pilotingSkillDFASelfDamageMitigation;
 
+        public bool pilotingSkillFallingDamageMitigation = true;
+        public bool PilotingSkillFallingDamageMitigation => pilotingSkillFallingDamageMitigation;
+
         public bool allowSteadyToKnockdownForMelee = true;
         public bool AllowSteadyToKnockdownForMelee => allowSteadyToKnockdownForMelee;
 
@@ -33,5 +31,14 @@
 
         public int dfaMissInstabilityLeggedPercent = 80;
         public float DfaMissInstabilityLeggedPercent => dfaMissInstabilityLeggedPercent / 100.0f;
+
+        public bool fallingDamage = true;
+        public bool FallingDamage => fallingDamage;
+
+        public int fallingDamageAmount = 5;
+        public int FallingDamageAmount => fallingDamageAmount;
+
+        public bool debug = false;
+        public bool Debug => debug;
     }
 }

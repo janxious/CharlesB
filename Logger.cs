@@ -1,12 +1,18 @@
 ﻿using System;
 using System.IO;
-using static CharlesB.CharlesB;
+using Harmony;
 
 namespace CharlesB
 {
     public class Logger
     {
-        private static string LogFilePath => $"{ModDirectory}/{Settings.ModName}.log";
+        private static string LogFilePath     => $"{Core.ModDirectory}/{Core.ModName}.log";
+        private static string FileLogFilePath => $"{Core.ModDirectory}/{Core.ModName}.harmony.log";
+
+        public static void Setup()
+        {
+            FileLog.logPath = FileLogFilePath;
+        }
 
         public static void Error(Exception ex)
         {
@@ -20,7 +26,7 @@ namespace CharlesB
 
         public static void Debug(String line)
         {
-            if (!CharlesB.ModSettings.debug) return;
+            if (!Core.ModSettings.Debug) return;
             using (var writer = new StreamWriter(LogFilePath, true))
             {
                 writer.WriteLine(line);
