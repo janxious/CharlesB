@@ -8,9 +8,10 @@ using UnityEngine;
 
 namespace CharlesB
 {
+    [HarmonyPatch(typeof(MechFallSequence), "setState")]
     public static class MechFallSequenceDamageAdder
     {
-        static IEnumerable<CodeInstruction> AddDamageCall(IEnumerable<CodeInstruction> instructions)
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             if (!Core.ModSettings.FallingDamage) return instructions;
 
@@ -26,7 +27,7 @@ namespace CharlesB
             var stateField = AccessTools.Field(typeof(MechFallSequence), "state");
             var owningMechGetter = AccessTools.Property(typeof(MechFallSequence), "OwningMech").GetGetMethod();
             var calculator = AccessTools.Method(
-                typeof(MechFallSequenceDamageAdder), "DoDamage", new Type[] {typeof(MechFallSequence), typeof(int), typeof(int)}
+                typeof(MechFallSequenceDamageAdder), "ApplyFallingDamage", new Type[] {typeof(MechFallSequence), typeof(int), typeof(int)}
             );
             var damageMethodCalloutInstructions = new List<CodeInstruction>();
             damageMethodCalloutInstructions.Add(new CodeInstruction(OpCodes.Ldarg_0));               // this
@@ -43,8 +44,11 @@ namespace CharlesB
         private static readonly ArmorLocation[] possibleLocations = new[]
         {
             ArmorLocation.Head,
+            ArmorLocation.CenterTorso,
             ArmorLocation.CenterTorsoRear,
+            ArmorLocation.LeftTorso,
             ArmorLocation.LeftTorsoRear,
+            ArmorLocation.RightTorso,
             ArmorLocation.RightTorsoRear,
             ArmorLocation.LeftArm,
             ArmorLocation.RightArm,
@@ -52,15 +56,33 @@ namespace CharlesB
             ArmorLocation.LeftLeg
         };
 
-        static void DoDamage(MechFallSequence sequence, int oldState, int newState)
+        static void ApplyFallingDamage(MechFallSequence sequence, int oldState, int newState)
         {
             if (newState != FinishedState) return;
-            Logger.Debug($"falling happening: {oldState} -> {newState}");
-            var locationTakingDamage = possibleLocations[UnityEngine.Random.RandomRange(0, possibleLocations.Length)];
-            Logger.Debug($"location taking damage: {locationTakingDamage}");
-            var hitInfo = new WeaponHitInfo(0, sequence.SequenceGUID, 0, 0, "FELL DOWN", sequence.OwningMech.GUID, 1, null, null, null, null, null, null, null, AttackDirection.FromBack, default(Vector2), null);
-            sequence.OwningMech.ApplyArmorStatDamage(locationTakingDamage, Core.ModSettings.FallingDamageAmount, hitInfo);
-            //sequence.OwningMech.TakeWeaponDamage(hitInfo, (int) locationTakingDamage, sequence.OwningMech.MeleeWeapon, Core.ModSettings.FallingDamageAmount, 0);
+            var mech = sequence.OwningMech;
+            if (mech.IsFlaggedForDeath || mech.IsDead) return; // TODO: maybe even the dead should take damage?
+            var locationTakingDamage = possibleLocations[UnityEngine.Random.Range(0, possibleLocations.Length)];
+            Logger.Debug($"falling happened!\nlocation taking damage: {locationTakingDamage}");
+            float rawFallingDamage = Core.ModSettings.FallingDamageAmount;
+            var fallingDamageValue = rawFallingDamage;
+            if (Core.ModSettings.PilotingSkillFallingDamageMitigation)
+            {
+                var mitigation = Calculator.PilotingMitigation(mech);
+                var mitigationPercent = Mathf.RoundToInt(mitigation * 100);
+                fallingDamageValue = rawFallingDamage - (mitigation * rawFallingDamage);
+                Logger.Debug($"falling damage numbers\n" +
+                             $"pilotSkill: {mech.SkillPiloting}\n" +
+                             $"mitigation: {mitigation}\n" +
+                             $"rawFallingDamage: {rawFallingDamage}\n" +
+                             $"mitigationPercent: {mitigationPercent}\n" +
+                             $"fallingDamageValue: {fallingDamageValue}");
+                mech.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(mech, $"Pilot Check: Avoided {mitigationPercent}% Falling Damage!", FloatieMessage.MessageNature.Neutral, true)));
+            }
+            mech.DEBUG_DamageLocation(locationTakingDamage, fallingDamageValue, mech);
+            if (AttackDirector.damageLogger.IsLogEnabled)
+            {
+                AttackDirector.damageLogger.Log($"@@@@@@@@ {mech.DisplayName} takes {fallingDamageValue} damage to its {Mech.GetLongArmorLocation(locationTakingDamage)} from falling!");
+            }
         }
     }
 }

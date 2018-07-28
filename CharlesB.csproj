@@ -50,6 +50,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Calculator.cs" />
     <Compile Include="CharlesB.cs" />
     <Compile Include="Core.cs" />
     <Compile Include="Logger.cs" />

@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Text;
 using BattleTech;
 using BattleTech.AttackDirectorHelpers;
 using Harmony;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace CharlesB
@@ -34,29 +30,32 @@ namespace CharlesB
 
             if (__instance.meleeAttackType != MeleeAttackType.DFA) return true;
 
-            var rawDFASelfDamageValue = __instance.attacker.StatCollection.GetValue<float>("DFASelfDamage");
+            var attacker = __instance.attacker;
+            var rawDFASelfDamageValue = attacker.StatCollection.GetValue<float>("DFASelfDamage");
             var dfaSelfDamageValue = rawDFASelfDamageValue;
             if (Core.ModSettings.PilotingSkillDFASelfDamageMitigation)
             {
                 // TODO: hook up water physics
 //                var superAlphaWaterFactor = 1f;
-//                if ((__instance.attacker as Mech).occupiedDesignMask.Description.Id == "DesignMaskWater")
+//                if ((attacker as Mech).occupiedDesignMask.Description.Id == "DesignMaskWater")
 //                    superAlphaWaterFactor = 2f;
 
-                // pilot skill can mitigate up to skill level * 10% of instability
-                var pilotSkill = __instance.attacker.SkillPiloting;
-                var mitigationMax = (float)Mathf.Min(pilotSkill, 10) / 10;
-                var mitigation = UnityEngine.Random.Range(0, mitigationMax);
+                var mitigation = Calculator.PilotingMitigation(attacker);
                 var mitigationPercent = Mathf.RoundToInt(mitigation * 100);
-                dfaSelfDamageValue = rawDFASelfDamageValue - rawDFASelfDamageValue * mitigation;
-                Logger.Debug($"dfa miss numbers\npilotSkill: {pilotSkill}\nmitigationMax: {mitigationMax}\nmitigation: {mitigation}\nrawDFASelfDamageValue: {rawDFASelfDamageValue}\nmitigationPercent: {mitigationPercent}\ndfaSelfDamageValue: {dfaSelfDamageValue}");
-                __instance.attacker.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(__instance.attacker, $"Pilot Check: Avoided {mitigationPercent}% DFA Self-Damage!", FloatieMessage.MessageNature.Neutral, true)));
+                dfaSelfDamageValue = rawDFASelfDamageValue - (rawDFASelfDamageValue * mitigation);
+                Logger.Debug($"dfa miss numbers\n" +
+                             $"pilotSkill: {attacker.SkillPiloting}\n" +
+                             $"mitigation: {mitigation}\n" +
+                             $"rawDFASelfDamageValue: {rawDFASelfDamageValue}\n" +
+                             $"mitigationPercent: {mitigationPercent}\n" +
+                             $"dfaSelfDamageValue: {dfaSelfDamageValue}");
+                attacker.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(attacker, $"Pilot Check: Avoided {mitigationPercent}% DFA Self-Damage!", FloatieMessage.MessageNature.Neutral, true)));
             }
-            __instance.attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, (int) ArmorLocation.LeftLeg, weapon, dfaSelfDamageValue, 0);
-            __instance.attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, (int) ArmorLocation.RightLeg, weapon, dfaSelfDamageValue, 0);
+            attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, (int) ArmorLocation.LeftLeg, weapon, dfaSelfDamageValue, 0);
+            attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, (int) ArmorLocation.RightLeg, weapon, dfaSelfDamageValue, 0);
             if (AttackDirector.damageLogger.IsLogEnabled)
             {
-                AttackDirector.damageLogger.Log($"@@@@@@@@ {__instance.attacker.DisplayName} takes {dfaSelfDamageValue} damage to its legs from the DFA attack!");
+                AttackDirector.damageLogger.Log($"@@@@@@@@ {attacker.DisplayName} takes {dfaSelfDamageValue} damage to its legs from the DFA attack!");
             }
             return true;
         }
@@ -91,7 +90,7 @@ namespace CharlesB
             return instructionList;
         }
     }
-    
+
     // this is the function that gets called after dfa hit/miss has been resolved but before the turn is over
     [HarmonyPatch(typeof(MechDFASequence), "OnMeleeComplete")]
     public static class MechDFASequence_OnMeleeComplete_Patch
@@ -113,13 +112,15 @@ namespace CharlesB
                     var instabilityToAdd = rawInstabilityToAdd;
                     if (Core.ModSettings.PilotingSkillInstabilityMitigation)
                     {
-                        // pilot skill can mitigate up to skill level * 10% of instability
-                        var pilotSkill = attacker.SkillPiloting;
-                        var mitigationMax = (float) Mathf.Min(pilotSkill, 10) / 10;
-                        var mitigation = UnityEngine.Random.Range(0, mitigationMax);
+                        var mitigation = Calculator.PilotingMitigation(attacker);
                         var mitigationPercent = Mathf.RoundToInt(mitigation * 100);
                         instabilityToAdd = rawInstabilityToAdd - rawInstabilityToAdd * mitigation;
-                        Logger.Debug($"dfa miss numbers\npilotSkill: {pilotSkill}\nmitigationMax: {mitigationMax}\nmitigation: {mitigation}\nrawInstabilityToAdd: {rawInstabilityToAdd}\nmitigationPercent: {mitigationPercent}\ninstabilityToAdd: {instabilityToAdd}");
+                        Logger.Debug($"dfa miss numbers\n" +
+                                     $"pilotSkill: {attacker.SkillPiloting}\n" +
+                                     $"mitigation: {mitigation}\n" +
+                                     $"rawInstabilityToAdd: {rawInstabilityToAdd}\n" +
+                                     $"mitigationPercent: {mitigationPercent}\n" +
+                                     $"instabilityToAdd: {instabilityToAdd}");
                         attacker.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(attacker, $"Pilot Check: Avoided {mitigationPercent}% Instability!", FloatieMessage.MessageNature.Neutral, true)));
                     }
 
@@ -154,13 +155,13 @@ namespace CharlesB
                     var target = __instance.MeleeTarget as AbstractActor;
                     if (target != null)
                     {
-                        Logger.Debug($"found target before first check. unsteady? {mech.IsUnsteady} : {mech.IsProne}");
+                        Logger.Debug($"found target before first check. unsteady? {mech.IsUnsteady} : prone? {mech.IsProne}");
                         target.NeedsInstabilityCheck = true;
                         target.CheckForInstability();
-                        Logger.Debug($"found target before second check. unsteady? {mech.IsUnsteady} : {mech.IsProne}");
+                        Logger.Debug($"found target before second check. unsteady? {mech.IsUnsteady} : prone? {mech.IsProne}");
                         target.NeedsInstabilityCheck = true;
                         target.CheckForInstability();
-                        Logger.Debug($"found target after second  check. downed? {mech.IsUnsteady} : {mech.IsProne}");
+                        Logger.Debug($"found target after second  check. downed? {mech.IsUnsteady} : prone? {mech.IsProne}");
                         var attacker = __instance.OwningMech;
                         target.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
                     }
@@ -191,13 +192,15 @@ namespace CharlesB
                     var instabilityToAdd = rawInstabilityToAdd;
                     if (Core.ModSettings.pilotingSkillInstabilityMitigation)
                     {
-                        // pilot skill can mitigate up to skill level * 10% of instability
-                        var pilotSkill = attacker.SkillPiloting;
-                        var mitigationMax = (float) Mathf.Min(pilotSkill, 10) / 10;
-                        var mitigation = UnityEngine.Random.Range(0, mitigationMax);
+                        var mitigation = Calculator.PilotingMitigation(attacker);
                         var mitigationPercent = Mathf.RoundToInt(mitigation * 100);
                         instabilityToAdd = rawInstabilityToAdd - rawInstabilityToAdd * mitigation;
-                        Logger.Debug($"melee miss numbers\npilotSkill: {pilotSkill}\nmitigationMax: {mitigationMax}\nmitigation: {mitigation}\nrawInstabilityToAdd: {rawInstabilityToAdd}\nmitigationPercent: {mitigationPercent}\ninstabilityToAdd: {instabilityToAdd}");
+                        Logger.Debug($"melee miss numbers\n" +
+                                     $"pilotSkill: {attacker.SkillPiloting}\n" +
+                                     $"mitigation: {mitigation}\n" +
+                                     $"rawInstabilityToAdd: {rawInstabilityToAdd}\n" +
+                                     $"mitigationPercent: {mitigationPercent}\n" +
+                                     $"instabilityToAdd: {instabilityToAdd}");
                         attacker.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(attacker, $"Pilot Check: Avoided {mitigationPercent}% Instability!", FloatieMessage.MessageNature.Neutral, true)));
                     }
 

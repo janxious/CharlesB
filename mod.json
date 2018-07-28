@@ -30,6 +30,6 @@
     "fallingDamage": true,
     "fallingDamageAmount": 5,
 
-    "debug": true
+    "debug": false
   }
 }

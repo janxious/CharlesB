@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using BattleTech;
 using Harmony;
 using Newtonsoft.Json;
 
@@ -24,7 +23,6 @@ namespace CharlesB
             }
             catch (Exception ex)
             {
-                FileLog.Log($"oopsie {ex.Message}");
                 Logger.Error(ex);
                 ModSettings = new Settings();
             }
@@ -32,15 +30,6 @@ namespace CharlesB
             HarmonyInstance.DEBUG = ModSettings.debug;
             var harmony = HarmonyInstance.Create(ModId);
             harmony.PatchAll(Assembly.GetExecutingAssembly());
-
-            // patch in mech damage on fall spescifically, which requires some voodoo
-            // TODO: doesn't require voodoo of the type I expected, so move to annotation patch
-            var mechFallSetState = AccessTools.Method(typeof(MechFallSequence), "setState");
-            // var mechFallPrefix = AccessTools.Method(typeof(MechFallSequenceDamageAdder), "GimmeALog");
-            // var mechFallPostfix = AccessTools.Method(typeof(MechFallSequenceDamageAdder), "AddDamageToFall");
-            var mechFallTranspiler = AccessTools.Method(typeof(MechFallSequenceDamageAdder), "AddDamageCall");
-            harmony.Patch(mechFallSetState, null, null, new HarmonyMethod(mechFallTranspiler));
-            HarmonyInstance.DEBUG = false;
         }
     }
 }
