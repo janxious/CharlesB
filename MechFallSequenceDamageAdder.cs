@@ -63,7 +63,7 @@ namespace CharlesB
             if (mech.IsFlaggedForDeath || mech.IsDead) return; // TODO: maybe even the dead should take damage?
             var locationTakingDamage = possibleLocations[UnityEngine.Random.Range(0, possibleLocations.Length)];
             Logger.Debug($"falling happened!\nlocation taking damage: {locationTakingDamage}");
-            float rawFallingDamage = Core.ModSettings.FallingDamageAmount;
+            var rawFallingDamage = Core.ModSettings.FallingAmountDamagePerTon * mech.tonnage;
             var fallingDamageValue = rawFallingDamage;
             if (Core.ModSettings.PilotingSkillFallingDamageMitigation)
             {

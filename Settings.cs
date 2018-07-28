@@ -35,8 +35,10 @@
         public bool fallingDamage = true;
         public bool FallingDamage => fallingDamage;
 
-        public int fallingDamageAmount = 5;
-        public int FallingDamageAmount => fallingDamageAmount;
+
+        public float fallingAmountDamagePerTon = 0.5f;
+        public float FallingAmountDamagePerTon => fallingAmountDamagePerTon;
+
 
         public bool debug = false;
         public bool Debug => debug;

@@ -28,7 +28,7 @@
     "allowSteadyToKnockdownForMelee": true,
 
     "fallingDamage": true,
-    "fallingDamageAmount": 5,
+    "fallingAmountDamagePerTon": 0.5,
 
     "debug": false
   }
