@@ -26,7 +26,7 @@ namespace CharlesB
                     var phraseFile = Path.Combine(Core.ModDirectory, "phrases.txt");
                     if (!File.Exists(phraseFile))
                     {
-                        throw new FileNotFoundException($"Unable to locate {phraseFile}");
+                        Logger.Error(new FileNotFoundException($"Unable to locate {phraseFile}"));
                     }
 
                     phrases = new List<string>();
