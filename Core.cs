@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Reflection;
 using Harmony;
 using Newtonsoft.Json;
@@ -12,10 +13,12 @@ namespace CharlesB
 
         internal static Settings ModSettings = new Settings();
         internal static string ModDirectory;
-
+        internal static string KnockdownPhrasePath;
+        
         public static void Init(string directory, string settingsJSON)
         {
             ModDirectory = directory;
+            KnockdownPhrasePath = Path.Combine(ModDirectory, "phrases.txt");
             Logger.Setup();
             try
             {

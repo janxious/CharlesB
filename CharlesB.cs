@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using BattleTech;
 using BattleTech.AttackDirectorHelpers;
@@ -15,8 +16,8 @@ namespace CharlesB
     {
         public static bool Prefix(ref MessageCenterMessage message, AttackDirector.AttackSequence __instance)
         {
-            Logger.Debug("hit prefix");
-            var attackSequenceResolveDamageMessage = (AttackSequenceResolveDamageMessage)message;
+            //Logger.Debug("hit prefix");
+            var attackSequenceResolveDamageMessage = (AttackSequenceResolveDamageMessage) message;
 
             var hitInfo = attackSequenceResolveDamageMessage.hitInfo;
             if (hitInfo.attackSequenceId != __instance.id) return true;
@@ -51,12 +52,14 @@ namespace CharlesB
                              $"dfaSelfDamageValue: {dfaSelfDamageValue}");
                 attacker.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(attacker, $"Pilot Check: Avoided {mitigationPercent}% DFA Self-Damage!", FloatieMessage.MessageNature.Neutral, true)));
             }
+
             attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, (int) ArmorLocation.LeftLeg, weapon, dfaSelfDamageValue, 0);
             attacker.TakeWeaponDamage(attackSequenceResolveDamageMessage.hitInfo, (int) ArmorLocation.RightLeg, weapon, dfaSelfDamageValue, 0);
             if (AttackDirector.damageLogger.IsLogEnabled)
             {
                 AttackDirector.damageLogger.Log($"@@@@@@@@ {attacker.DisplayName} takes {dfaSelfDamageValue} damage to its legs from the DFA attack!");
             }
+
             return true;
         }
 
@@ -135,6 +138,9 @@ namespace CharlesB
                         Logger.Debug($"flagged for knockdown? {attacker.IsFlaggedForKnockdown}");
                     }
                 }
+
+                Logger.Debug("OnMeleeComplete");
+                FallHandling.SaySomethingPithy(attacker);                          
             }
         }
     }
@@ -167,6 +173,7 @@ namespace CharlesB
                     }
                 }
             }
+
             return true;
         }
     }
@@ -227,6 +234,8 @@ namespace CharlesB
                         target.NeedsInstabilityCheck = true;
                         target.CheckForInstability();
                         var attacker = __instance.OwningMech;
+                        Logger.Debug("MechMeleeSequence OnMeleeComplete");
+                        FallHandling.SaySomethingPithy(attacker as Mech);
                         target.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
                     }
                 }
@@ -242,6 +251,8 @@ namespace CharlesB
             // attacker second instability check during melee whiff
             var attacker = __instance.OwningMech;
             attacker.CheckForInstability();
+            Logger.Debug("CompleteOrders");
+            FallHandling.SaySomethingPithy(attacker);  // only one I couldn't get to trigger, but I believe is correctly placed
             attacker.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
 
             // second target instability check during melee hit if can go to ground in one hit
@@ -253,14 +264,56 @@ namespace CharlesB
                     if (target != null)
                     {
                         target.NeedsInstabilityCheck = true;
-                        target.CheckForInstability();
+                        target.CheckForInstability();                   
                         target.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
                     }
                 }
             }
+
             Logger.Debug($"did we fall? {attacker.IsProne}");
             Logger.Debug($"did they fall? {__instance.MeleeTarget.IsProne}");
             return true;
+        }
+    }
+
+    public static class FallHandling
+    {
+        /// <summary>
+        /// displays a pithy floatie message over the supplied mech
+        /// </summary>
+        /// <param name="mech"></param>
+        public static void SaySomethingPithy(Mech mech)
+        {
+            if (!Settings.EnableKnockdownPhrases) return;
+            if (!mech.IsFlaggedForKnockdown) return;
+            
+            var fileLoaded = false;  // only initialize the list once, only if it's needed
+            var phrases = new List<string>();
+            var random = new System.Random();
+            if (!fileLoaded)
+            {
+                try
+                {
+                    var reader = new StreamReader(Core.KnockdownPhrasePath);
+                    using (reader)
+                    {
+                        while (!reader.EndOfStream)
+                        {
+                            phrases.Add(reader.ReadLine());
+                        }
+                    }
+
+                    fileLoaded = true;
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e);
+                }
+            }
+
+            var knockdownMessage = phrases[random.Next(0, phrases.Count - 1)];
+            mech.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(
+                new ShowActorInfoSequence(mech, knockdownMessage, FloatieMessage.MessageNature.Debuff, false))); // false leaves camera unlocked from floatie
         }
     }
 }
