@@ -260,7 +260,7 @@ namespace CharlesB
                     if (target != null)
                     {
                         target.NeedsInstabilityCheck = true;
-                        target.CheckForInstability();                   
+                        target.CheckForInstability();
                         target.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
                     }
                 }
