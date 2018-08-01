@@ -5,31 +5,38 @@ using BattleTech;
 
 namespace CharlesB
 {
-    public class FallHandling
+    public class HandleFall
     {
-        private static readonly string KnockdownPhrasePath = Path.Combine(Core.ModDirectory, "phrases.txt");
+        private static List<string> phrases = new List<string>();
 
         /// <summary>
         ///     displays a pithy floatie message over the supplied mech
         /// </summary>
         /// <param name="mech"></param>
-        public static void SaySomethingPithy(Mech mech)
+        public static void Say(Mech mech)
         {
             if (!Settings.EnableKnockdownPhrases) return;
             if (!mech.IsFlaggedForKnockdown) return;
 
             var fileLoaded = false; // only initialize the list once, only if it's needed
-            var phrases = new List<string>();
-            var random = new Random();
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (!fileLoaded)
                 try
                 {
-                    var reader = new StreamReader(KnockdownPhrasePath);
+                    var phraseFile = Path.Combine(Core.ModDirectory, "phrases.txt");
+                    if (!File.Exists(phraseFile))
+                    {
+                        throw new FileNotFoundException($"Unable to locate {phraseFile}");
+                    }
+
+                    phrases = new List<string>();
+                    var reader = new StreamReader(phraseFile);
                     using (reader)
                     {
                         while (!reader.EndOfStream) phrases.Add(reader.ReadLine());
                     }
 
+                    // ReSharper disable once RedundantAssignment
                     fileLoaded = true;
                 }
                 catch (Exception e)
@@ -37,6 +44,7 @@ namespace CharlesB
                     Logger.Error(e);
                 }
 
+            var random = new Random();
             var knockdownMessage = phrases[random.Next(0, phrases.Count - 1)];
             mech.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(
                 new ShowActorInfoSequence(mech, knockdownMessage, FloatieMessage.MessageNature.Debuff, false))); // false leaves camera unlocked from floatie

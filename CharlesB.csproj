@@ -53,6 +53,7 @@
     <Compile Include="Calculator.cs" />
     <Compile Include="CharlesB.cs" />
     <Compile Include="Core.cs" />
+    <Compile Include="HandleFall.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MechFallSequenceDamageAdder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

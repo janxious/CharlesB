@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using BattleTech;
 using BattleTech.AttackDirectorHelpers;
@@ -139,7 +138,7 @@ namespace CharlesB
                     }
                 }
 
-                FallHandling.SaySomethingPithy(attacker);                          
+                HandleFall.Say(attacker);                          
             }
         }
     }
@@ -233,7 +232,7 @@ namespace CharlesB
                         target.NeedsInstabilityCheck = true;
                         target.CheckForInstability();
                         var attacker = __instance.OwningMech;
-                        FallHandling.SaySomethingPithy(attacker as Mech);
+                        HandleFall.Say(attacker);
                         target.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
                     }
                 }
@@ -249,7 +248,7 @@ namespace CharlesB
             // attacker second instability check during melee whiff
             var attacker = __instance.OwningMech;
             attacker.CheckForInstability();
-            FallHandling.SaySomethingPithy(attacker);  // only one I couldn't get to trigger, but I believe is correctly placed
+            HandleFall.Say(attacker);  // only one I couldn't get to trigger, but I believe is correctly placed
             attacker.HandleKnockdown(__instance.RootSequenceGUID, attacker.GUID, Vector2.one, null);
 
             // second target instability check during melee hit if can go to ground in one hit

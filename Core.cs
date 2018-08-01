@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Reflection;
 using Harmony;
 using Newtonsoft.Json;
@@ -13,7 +12,7 @@ namespace CharlesB
 
         internal static Settings ModSettings = new Settings();
         internal static string ModDirectory;
-        
+
         public static void Init(string directory, string settingsJSON)
         {
             ModDirectory = directory;
