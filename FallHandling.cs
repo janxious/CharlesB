@@ -25,6 +25,10 @@ namespace CharlesB
                 try
                 {
                     var reader = new StreamReader(KnockdownPhrasePath);
+                    if (!File.Exists(KnockdownPhrasePath))
+                    {
+                        throw new FileNotFoundException("Unable to locate phrases.txt in mod folder");
+                    }
                     using (reader)
                     {
                         while (!reader.EndOfStream) phrases.Add(reader.ReadLine());
