@@ -16,7 +16,7 @@ namespace CharlesB
     {
         public static bool Prefix(ref MessageCenterMessage message, AttackDirector.AttackSequence __instance)
         {
-            //Logger.Debug("hit prefix");
+            Logger.Debug("hit prefix");
             var attackSequenceResolveDamageMessage = (AttackSequenceResolveDamageMessage) message;
 
             var hitInfo = attackSequenceResolveDamageMessage.hitInfo;
