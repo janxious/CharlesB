@@ -8,7 +8,8 @@ namespace CharlesB
     public class HandleFall
     {
         private static List<string> phrases = new List<string>();
-
+        private static bool _fileLoaded = false;
+ 
         /// <summary>
         ///     displays a pithy floatie message over the supplied mech
         /// </summary>
@@ -18,9 +19,7 @@ namespace CharlesB
             if (!Settings.EnableKnockdownPhrases) return;
             if (!mech.IsFlaggedForKnockdown) return;
 
-            var fileLoaded = false; // only initialize the list once, only if it's needed
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (!fileLoaded)
+            if (!_fileLoaded)
                 try
                 {
                     var phraseFile = Path.Combine(Core.ModDirectory, "phrases.txt");
@@ -36,8 +35,7 @@ namespace CharlesB
                         while (!reader.EndOfStream) phrases.Add(reader.ReadLine());
                     }
 
-                    // ReSharper disable once RedundantAssignment
-                    fileLoaded = true;
+                    _fileLoaded = true;
                 }
                 catch (Exception e)
                 {
