@@ -62,7 +62,7 @@
   <ItemGroup>
     <Content Include="LICENSE" />
     <Content Include="mod.json" />
-    <Content Include="Properties\phrases.txt" />
+    <Content Include="phrases.txt" />
     <Content Include="README.md" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
