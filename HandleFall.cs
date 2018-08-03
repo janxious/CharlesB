@@ -8,6 +8,7 @@ namespace CharlesB
     public class HandleFall
     {
         private static List<string> phrases = new List<string>();
+        private static bool fileLoaded; // for memoizing the phrases
 
         /// <summary>
         ///     displays a pithy floatie message over the supplied mech
@@ -18,8 +19,6 @@ namespace CharlesB
             if (!Settings.EnableKnockdownPhrases) return;
             if (!mech.IsFlaggedForKnockdown) return;
 
-            var fileLoaded = false; // only initialize the list once, only if it's needed
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             if (!fileLoaded)
                 try
                 {
@@ -36,7 +35,6 @@ namespace CharlesB
                         while (!reader.EndOfStream) phrases.Add(reader.ReadLine());
                     }
 
-                    // ReSharper disable once RedundantAssignment
                     fileLoaded = true;
                 }
                 catch (Exception e)
@@ -44,8 +42,7 @@ namespace CharlesB
                     Logger.Error(e);
                 }
 
-            var random = new Random();
-            var knockdownMessage = phrases[random.Next(0, phrases.Count - 1)];
+            var knockdownMessage = phrases[UnityEngine.Random.Range(0, phrases.Count - 1)];
             mech.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(
                 new ShowActorInfoSequence(mech, knockdownMessage, FloatieMessage.MessageNature.Debuff, false))); // false leaves camera unlocked from floatie
         }
