@@ -35,6 +35,8 @@
         public bool fallingDamage = true;
         public bool FallingDamage => fallingDamage;
 
+        public static bool enableKnockdownPhrases = true;
+        public static bool EnableKnockdownPhrases => enableKnockdownPhrases;
 
         public float fallingAmountDamagePerTon = 0.5f;
         public float FallingAmountDamagePerTon => fallingAmountDamagePerTon;
