@@ -78,7 +78,7 @@ namespace CharlesB
                              $"fallingDamageValue: {fallingDamageValue}");
                 mech.Combat.MessageCenter.PublishMessage(new AddSequenceToStackMessage(new ShowActorInfoSequence(mech, $"Pilot Check: Avoided {mitigationPercent}% Falling Damage!", FloatieMessage.MessageNature.Neutral, true)));
             }
-            mech.DEBUG_DamageLocation(locationTakingDamage, fallingDamageValue, mech);
+            mech.DEBUG_DamageLocation(locationTakingDamage, fallingDamageValue, mech, damageType: DamageType.Knockdown);
             if (AttackDirector.damageLogger.IsLogEnabled)
             {
                 AttackDirector.damageLogger.Log($"@@@@@@@@ {mech.DisplayName} takes {fallingDamageValue} damage to its {Mech.GetLongArmorLocation(locationTakingDamage)} from falling!");
